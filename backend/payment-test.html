@@ -1,0 +1,285 @@
+<!--<!DOCTYPE html>-->
+<!--<html>-->
+<!--<head>-->
+<!--    <title>Test Razorpay Payment</title>-->
+<!--    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>-->
+<!--</head>-->
+<!--<body>-->
+<!--<h1>Test Razorpay Payment</h1>-->
+<!--<button onclick="startPayment()">Pay ₹5000</button>-->
+
+<!--<script>-->
+<!--    function startPayment() {-->
+<!--        // Replace these values with your actual data from Step 1-->
+<!--        const orderId = "order_RO8yrRRjinvl1P"; // From Step 1 response-->
+<!--        const keyId = "rzp_test_RNtLly5wnzPpI8"; // From Step 1 response-->
+
+<!--        const options = {-->
+<!--            key: keyId,-->
+<!--            amount: 500000, // 5000 * 100 paise-->
+<!--            currency: "INR",-->
+<!--            name: "Doctors Association",-->
+<!--            description: "Membership Fee",-->
+<!--            order_id: orderId,-->
+<!--            handler: function(response) {-->
+<!--                // This function is called after successful payment-->
+<!--                console.log("Payment successful!");-->
+<!--                console.log("Order ID:", response.razorpay_order_id);-->
+<!--                console.log("Payment ID:", response.razorpay_payment_id);-->
+<!--                console.log("Signature:", response.razorpay_signature);-->
+
+<!--                // Display these values - you'll need them for Step 3-->
+<!--                document.getElementById("result").innerHTML = `-->
+<!--                        <h2>Payment Successful! ✅</h2>-->
+<!--                        <p><strong>Copy these values for verification:</strong></p>-->
+<!--                        <pre>-->
+<!--{-->
+<!--  "razorpayOrderId": "${response.razorpay_order_id}",-->
+<!--  "razorpayPaymentId": "${response.razorpay_payment_id}",-->
+<!--  "razorpaySignature": "${response.razorpay_signature}"-->
+<!--}-->
+<!--                        </pre>-->
+<!--                    `;-->
+<!--            },-->
+<!--            prefill: {-->
+<!--                name: "Dr. Anjali Sharma",-->
+<!--                email: "anjali.sharma@example.com",-->
+<!--                contact: "9876543210"-->
+<!--            },-->
+<!--            theme: {-->
+<!--                color: "#3399cc"-->
+<!--            }-->
+<!--        };-->
+
+<!--        const rzp = new Razorpay(options);-->
+<!--        rzp.open();-->
+
+<!--        rzp.on('payment.failed', function(response) {-->
+<!--            alert("Payment failed: " + response.error.description);-->
+<!--        });-->
+<!--    }-->
+<!--</script>-->
+
+<!--<div id="result"></div>-->
+<!--</body>-->
+<!--</html>-->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Razorpay Payment - Auto Verification</title>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        button {
+            background-color: #3399cc;
+            color: white;
+            padding: 15px 30px;
+            font-size: 18px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #2277aa;
+        }
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+        .loading {
+            display: none;
+            margin-top: 20px;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3399cc;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+<h1>🏥 Doctors Association - Test Payment</h1>
+<p>This page will automatically verify payment after successful Razorpay Checkout.</p>
+
+<div class="info result">
+    <h3>📝 Instructions:</h3>
+    <ol>
+        <li>First, call <code>POST /api/membership/register</code> to get Order ID</li>
+        <li>Copy the <code>orderId</code> and <code>razorpayKeyId</code> from response</li>
+        <li>Update the values below in the script section</li>
+        <li>Click "Pay ₹5000" button</li>
+        <li>Payment will be automatically verified! ✅</li>
+    </ol>
+</div>
+
+<button onclick="startPayment()">💳 Pay ₹5000</button>
+
+<div class="loading" id="loading">
+    <div class="spinner"></div>
+    <p style="text-align: center; margin-top: 10px;">Verifying payment...</p>
+</div>
+
+<div id="result"></div>
+
+<script>
+    // ⚠️ UPDATE THESE VALUES FROM YOUR REGISTER API RESPONSE
+    const ORDER_ID = "order_RO9zyyMUdu67fB";  // ← Change this
+    const RAZORPAY_KEY_ID = "rzp_test_RNtLly5wnzPpI8";  // ← Change this
+    const BACKEND_URL = "http://localhost:8080";  // ← Change if different
+
+    function startPayment() {
+        if (ORDER_ID === "order_RO8aT8iL5qRUBr") {
+            alert("⚠️ Please update ORDER_ID and RAZORPAY_KEY_ID in the script first!");
+            return;
+        }
+
+        const options = {
+            key: RAZORPAY_KEY_ID,
+            amount: 500000, // 5000 * 100 paise
+            currency: "INR",
+            name: "Doctors Association",
+            description: "Membership Fee",
+            order_id: ORDER_ID,
+            handler: async function(response) {
+                console.log("✅ Payment successful!", response);
+
+                // Show loading
+                document.getElementById("loading").style.display = "block";
+                document.getElementById("result").innerHTML = "";
+
+                // Automatically verify payment by calling backend
+                try {
+                    const verifyResponse = await fetch(`${BACKEND_URL}/api/webhooks/payment-callback`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            razorpayOrderId: response.razorpay_order_id,
+                            razorpayPaymentId: response.razorpay_payment_id,
+                            razorpaySignature: response.razorpay_signature
+                        })
+                    });
+
+                    const result = await verifyResponse.json();
+
+                    // Hide loading
+                    document.getElementById("loading").style.display = "none";
+
+                    if (result.success) {
+                        document.getElementById("result").innerHTML = `
+                                <div class="result success">
+                                    <h2>🎉 Payment Verified Successfully!</h2>
+                                    <p><strong>Membership ID:</strong> ${result.data}</p>
+                                    <p>Your membership has been activated and saved to database.</p>
+                                    <p>⏰ Record will auto-expire after 1 day (for testing).</p>
+                                    <hr>
+                                    <h3>Payment Details:</h3>
+                                    <pre>${JSON.stringify({
+                            orderId: response.razorpay_order_id,
+                            paymentId: response.razorpay_payment_id,
+                            signature: response.razorpay_signature
+                        }, null, 2)}</pre>
+                                </div>
+                            `;
+                    } else {
+                        throw new Error(result.message);
+                    }
+
+                } catch (error) {
+                    // Hide loading
+                    document.getElementById("loading").style.display = "none";
+
+                    document.getElementById("result").innerHTML = `
+                            <div class="result error">
+                                <h2>❌ Payment Verification Failed</h2>
+                                <p><strong>Error:</strong> ${error.message}</p>
+                                <p>Please check backend logs for details.</p>
+                                <hr>
+                                <h3>Payment Details (for manual verification):</h3>
+                                <pre>${JSON.stringify({
+                        razorpayOrderId: response.razorpay_order_id,
+                        razorpayPaymentId: response.razorpay_payment_id,
+                        razorpaySignature: response.razorpay_signature
+                    }, null, 2)}</pre>
+                            </div>
+                        `;
+                }
+            },
+            prefill: {
+                name: "Dr. Test User",
+                email: "test@example.com",
+                contact: "9876543210"
+            },
+            theme: {
+                color: "#3399cc"
+            },
+            modal: {
+                ondismiss: function() {
+                    console.log("Payment cancelled by user");
+                }
+            }
+        };
+
+        const rzp = new Razorpay(options);
+
+        rzp.on('payment.failed', function(response) {
+            document.getElementById("result").innerHTML = `
+                    <div class="result error">
+                        <h2>❌ Payment Failed</h2>
+                        <p><strong>Error Code:</strong> ${response.error.code}</p>
+                        <p><strong>Description:</strong> ${response.error.description}</p>
+                        <p><strong>Reason:</strong> ${response.error.reason}</p>
+                    </div>
+                `;
+        });
+
+        rzp.open();
+    }
+
+    // Show current configuration
+    window.onload = function() {
+        console.log("Current Configuration:");
+        console.log("Order ID:", ORDER_ID);
+        console.log("Razorpay Key ID:", RAZORPAY_KEY_ID);
+        console.log("Backend URL:", BACKEND_URL);
+    };
+</script>
+</body>
+</html>
