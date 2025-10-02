@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend Connection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #059669;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border-left: 4px solid #059669;
+            background: #f0fdf4;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #059669;
+        }
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #dc2626;
+        }
+        .loading {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #3b82f6;
+        }
+        button {
+            background: #059669;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #047857;
+        }
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        .info {
+            background: #fffbeb;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #fbbf24;
+            margin: 20px 0;
+        }
+        pre {
+            background: #1f2937;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔌 Backend Connection Test</h1>
+        
+        <div class="info">
+            <strong>⚠️ Before testing:</strong>
+            <ol>
+                <li>Make sure your Spring Boot backend is running</li>
+                <li>Backend should be on: <code>http://localhost:8080</code></li>
+                <li>CORS should allow: <code>http://localhost:3000</code> or <code>null</code></li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 1: Health Check</h3>
+            <p>Tests if backend is running and responding</p>
+            <button onclick="testHealth()">Run Health Check</button>
+            <div id="health-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 2: Check Email Endpoint</h3>
+            <p>Tests email validation endpoint</p>
+            <input type="email" id="test-email" placeholder="test@example.com" style="padding: 8px; width: 300px; margin-right: 10px;">
+            <button onclick="testEmailCheck()">Check Email</button>
+            <div id="email-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 3: Member Count</h3>
+            <p>Tests member count endpoint</p>
+            <button onclick="testMemberCount()">Get Member Count</button>
+            <div id="count-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 4: Full Registration Flow (Simulated)</h3>
+            <p>Tests registration endpoint (won't complete payment)</p>
+            <button onclick="testRegistration()">Test Registration</button>
+            <div id="registration-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 5: CORS Check</h3>
+            <p>Verifies CORS is properly configured</p>
+            <button onclick="testCORS()">Test CORS</button>
+            <div id="cors-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Backend Configuration</h3>
+            <p>Current backend URL: <strong id="backend-url">http://localhost:8080/api</strong></p>
+            <input type="text" id="custom-url" placeholder="Enter custom backend URL" style="padding: 8px; width: 300px; margin-right: 10px;">
+            <button onclick="updateBackendURL()">Update URL</button>
+        </div>
+    </div>
+
+    <script>
+        let API_BASE_URL = "http://localhost:8080/api";
+
+        function updateBackendURL() {
+            const customUrl = document.getElementById("custom-url").value.trim();
+            if (customUrl) {
+                API_BASE_URL = customUrl.endsWith('/api') ? customUrl : customUrl + '/api';
+                document.getElementById("backend-url").textContent = API_BASE_URL;
+                showResult('cors-result', 'success', 'Backend URL updated to: ' + API_BASE_URL);
+            }
+        }
+
+        function showResult(elementId, type, message) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="result ${type}">${message}</div>`;
+        }
+
+        async function testHealth() {
+            const resultDiv = 'health-result';
+            showResult(resultDiv, 'loading', '⏳ Testing connection...');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/membership/health`);
+                const data = await response.json();
+
+                if (data.success) {
+                    showResult(resultDiv, 'success', 
+                        `✅ Backend is running!\n\nResponse: ${JSON.stringify(data, null, 2)}`);
+                } else {
+                    showResult(resultDiv, 'error', 
+                        `❌ Backend responded but not healthy\n\nResponse: ${JSON.stringify(data, null, 2)}`);
+                }
+            } catch (error) {
+                showResult(resultDiv, 'error', 
+                    `❌ Connection failed!\n\nError: ${error.message}\n\n` +
+                    `Make sure:\n` +
+                    `1. Backend is running on ${API_BASE_URL.replace('/api', '')}\n` +
+                    `2. CORS is configured to allow requests from this page`);
+            }
+        }
+
+        async function testEmailCheck() {
+            const resultDiv = 'email-result';
+            const email = document.getElementById('test-email').value.trim();
+
+            if (!email) {
+                showResult(resultDiv, 'error', '❌ Please enter an email address');
+                return;
+            }
+
+            showResult(resultDiv, 'loading', '⏳ Checking email...');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/membership/check-email?email=${encodeURIComponent(email)}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    showResult(resultDiv, 'success', 
+                        `✅ Email check successful!\n\nResponse: ${JSON.stringify(data, null, 2)}`);
+                } else {
+                    showResult(resultDiv, 'error', 
+                        `❌ Request failed with status ${response.status}\n\nResponse: ${JSON.stringify(data, null, 2)}`);
+                }
+            } catch (error) {
+                showResult(resultDiv, 'error', 
+                    `❌ Request failed!\n\nError: ${error.message}`);
+            }
+        }
+
+        async function testMemberCount() {
+            const resultDiv = 'count-result';
+            showResult(resultDiv, 'loading', '⏳ Getting member count...');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/membership/count`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    showResult(resultDiv, 'success', 
+                        `✅ Got member count!\n\nActive members: ${data.data}\n\nFull response: ${JSON.stringify(data, null, 2)}`);
+                } else {
+                    showResult(resultDiv, 'error', 
+                        `❌ Request failed\n\nResponse: ${JSON.stringify(data, null, 2)}`);
+                }
+            } catch (error) {
+                showResult(resultDiv, 'error', 
+                    `❌ Request failed!\n\nError: ${error.message}`);
+            }
+        }
+
+        async function testRegistration() {
+            const resultDiv = 'registration-result';
+            showResult(resultDiv, 'loading', '⏳ Testing registration endpoint...');
+
+            const testData = {
+                fullName: "Dr. Test User",
+                email: "test" + Date.now() + "@example.com",
+                phone: "9876543210",
+                specialization: "Testing",
+                registrationNumber: "TEST12345",
+                address: "123 Test Street",
+                city: "Test City",
+                state: "Test State",
+                pincode: "123456",
+                notes: "This is a test registration"
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/membership/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    showResult(resultDiv, 'success', 
+                        `✅ Registration endpoint working!\n\n` +
+                        `Order ID: ${data.data.orderId}\n` +
+                        `Amount: ₹${data.data.amount}\n` +
+                        `Razorpay Key: ${data.data.razorpayKeyId}\n\n` +
+                        `Full response: ${JSON.stringify(data, null, 2)}\n\n` +
+                        `⚠️ This order was created but payment not completed. It will expire in 15 minutes.`);
+                } else {
+                    showResult(resultDiv, 'error', 
+                        `❌ Registration failed\n\nResponse: ${JSON.stringify(data, null, 2)}`);
+                }
+            } catch (error) {
+                showResult(resultDiv, 'error', 
+                    `❌ Request failed!\n\nError: ${error.message}`);
+            }
+        }
+
+        async function testCORS() {
+            const resultDiv = 'cors-result';
+            showResult(resultDiv, 'loading', '⏳ Testing CORS configuration...');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/membership/health`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const corsHeaders = {
+                        'Access-Control-Allow-Origin': response.headers.get('Access-Control-Allow-Origin'),
+                        'Access-Control-Allow-Methods': response.headers.get('Access-Control-Allow-Methods'),
+                        'Access-Control-Allow-Headers': response.headers.get('Access-Control-Allow-Headers'),
+                    };
+
+                    showResult(resultDiv, 'success', 
+                        `✅ CORS is working!\n\n` +
+                        `CORS Headers:\n${JSON.stringify(corsHeaders, null, 2)}\n\n` +
+                        `If you see "null" values, CORS might not be explicitly set but browser allows it.\n` +
+                        `This is fine for localhost testing.`);
+                } else {
+                    showResult(resultDiv, 'error', 
+                        `❌ CORS test failed\n\nStatus: ${response.status}`);
+                }
+            } catch (error) {
+                if (error.message.includes('CORS')) {
+                    showResult(resultDiv, 'error', 
+                        `❌ CORS Error Detected!\n\n` +
+                        `Error: ${error.message}\n\n` +
+                        `Fix: Add this to your backend .env file:\n` +
+                        `CORS_ORIGINS=http://localhost:3000,http://localhost:5173,null\n\n` +
+                        `Then restart your backend.`);
+                } else {
+                    showResult(resultDiv, 'error', 
+                        `❌ Request failed!\n\nError: ${error.message}`);
+                }
+            }
+        }
+
+        // Auto-run health check on page load
+        window.onload = () => {
+            console.log('Testing backend connection...');
+            testHealth();
+        };
+    </script>
+</body>
+</html>
